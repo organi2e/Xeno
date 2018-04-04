@@ -7,5 +7,5 @@
 import Accelerate
 import MetalPerformanceShaders
 public protocol Task {
-	func execute(commandBuffer: MTLCommandBuffer) throws
+	func eval(commandBuffer: MTLCommandBuffer) throws
 }

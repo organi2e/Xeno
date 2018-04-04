@@ -25,7 +25,7 @@ class Square {
 		let device: MTLDevice = x.device
 		let library: MTLLibrary = try device.makeDefaultLibrary(bundle: Bundle(for: Square.self))
 		let constantValues: MTLFunctionConstantValues = MTLFunctionConstantValues().binding(value: uint(length), for: "N")
-		let function: MTLFunction = try library.makeFunction(name: "square_" + x.type.suffix, constantValues: constantValues)
+		let function: MTLFunction = try library.makeFunction(name: "square_" + x.type.description, constantValues: constantValues)
 		let rowBytes: Int = columns * x.type.stride
 		let matrixBytes: Int = rows * rowBytes
 		descriptor = MPSMatrixDescriptor(rows: rows, columns: columns, matrices: count, rowBytes: rowBytes, matrixBytes: matrixBytes, dataType: x.type.mpsType)

@@ -14,11 +14,13 @@ private let __name__: String = uniq
 private let __type__: String = uniq
 private let __index__: String = "__index__"
 private let __count__: String = "__count__"
+private let __extra__: String = uniq
 private let __fetch__: String = uniq
 private let __store__: String = uniq
 private let __argument__: String = uniq
 private let __template__: String = """
 using namespace metal;
+\(__extra__);
 constant uint \(__count__) [[ function_constant(0) ]];
 kernel void \(__kernel__)(
 	device \(__type__) * const \(__name__) [[ buffer(0) ]],
@@ -30,9 +32,82 @@ kernel void \(__kernel__)(
 	}
 }
 """
+class Map<X> where X : XType {
+	let pipeline: MTLComputePipelineState
+	let threads: MTLSize
+	let groups: MTLSize
+	let inputs: [Sym]
+	let offsets: [Int]
+	let range: Range<Int>
+	let descriptor: MPSMatrixDescriptor
+	init(lambda: String, source S: [String: Sym], extra: String = "") throws {
+		guard let (_, primary): (String, Sym) = S.first else {
+			throw ErrorCases.any
+		}
+		let source: [(String, Sym)] = S.map {
+			assert(primary.device === $1.device)
+			assert(primary.rows == $1.rows)
+			assert(primary.columns == $1.columns)
+			return ($0, $1)
+		}
+		let length: Int = primary.rows * primary.columns
+		let argument: [(String, String)] = source.enumerated().map {
+			let temp: String = uniq
+			let b: String = "thread \($1.1.xtype.description) const \($1.0) = \(temp) [ \(__index__) ]"
+			let a: String = "device \($1.1.xtype.description) const * const \(temp) [[ buffer(\( $0 + 1 )) ]]"
+			return (a, b)
+		}
+		let store: String = "\(__name__) [ \(__index__) ] = \(lambda)"
+		let code: String = __template__
+			.replacingOccurrences(of: __type__, with: X.description)
+			.replacingOccurrences(of: __argument__, with: argument.map { $0.0 }.joined(separator: ",\r\n\t"))
+			.replacingOccurrences(of: __extra__, with: extra)
+			.replacingOccurrences(of: __fetch__, with: argument.map { $0.1 }.joined(separator: ";\r\n\t\t"))
+			.replacingOccurrences(of: __store__, with: store)
+		let library: MTLLibrary = try primary.device.makeLibrary(source: code, options: nil)
+		let constantValues: MTLFunctionConstantValues = MTLFunctionConstantValues().binding(value: uint(length), for: __count__)
+		let function: MTLFunction = try library.makeFunction(name: __kernel__, constantValues: constantValues)
+		pipeline = try primary.device.makeComputePipelineState(function: function)
+		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
+		groups = MTLSize(width: (length-1)/threads.width+1, height: 1, depth: 1)
+		inputs = source.map { $1 }
+		offsets = [Int](repeating: 0, count: inputs.count)
+		range = 1..<(1+inputs.count)
+		descriptor = MPSMatrixDescriptor(rows: primary.rows, columns: primary.columns, rowBytes: primary.columns * X.stride, dataType: X.mpsType)
+	}
+}
+extension Map: Sym {
+	var xtype: XType.Type {
+		return X.self
+	}
+	var rows: Int {
+		return descriptor.rows
+	}
+	var columns: Int {
+		return descriptor.columns
+	}
+	var device: MTLDevice {
+		return pipeline.device
+	}
+	func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer {
+		assert(device === commandBuffer.device)
+		let matrix: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
+		let buffers: [MTLBuffer] = try inputs.map { try $0.eval(commandBuffer: commandBuffer) }
+		let encoder: MTLComputeCommandEncoder = try commandBuffer.makeComputeCommandEncoder()
+		encoder.setComputePipelineState(pipeline)
+		encoder.setBuffer(matrix.data, offset: 0, index: 0)
+		encoder.setBuffers(buffers, offsets: offsets, range: range)
+		encoder.dispatchThreadgroups(groups, threadsPerThreadgroup: threads)
+		encoder.endEncoding()
+		return matrix.data
+	}
+}
+public func map<X>(type: X.Type, lambda: String, source: [String: Sym], extra: String = "") throws -> Sym where X : XType {
+	return try Map<X>(lambda: lambda, source: source, extra: extra)
+}
+/*
 class Map {
 	let pipeline: MTLComputePipelineState
-	let count: Int
 	let rows: Int
 	let columns: Int
 	let input: [Symbol]
@@ -40,9 +115,9 @@ class Map {
 	let threads: MTLSize
 	let offsets: [Int]
 	let range: Range<Int>
-	let type: MPSType.Type
+	let type: XType.Type
 	var evaluated: (MTLCommandBuffer, MPSTemporaryMatrix)?
-	init(type T: MPSType.Type, lambda: String, source X: [String: Symbol]) throws {
+	init(type T: XType.Type, lambda: String, source X: [String: Symbol]) throws {
 		guard let (_, primary): (String, Symbol) = X.first else {
 			throw ErrorCases.any
 		}
@@ -83,7 +158,7 @@ class Map {
 		range = 1..<source.count + 1
 	}
 }
-extension Map: Symbol {
+extension Map: Sym {
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MPSArray {
 		if let (previous, matrix): (MTLCommandBuffer, MPSTemporaryMatrix) = evaluated, previous === commandBuffer {
 			return matrix
@@ -109,10 +184,8 @@ extension Map: Symbol {
 	var device: MTLDevice {
 		return pipeline.device
 	}
-	var transpose: Bool {
-		return false
-	}
 }
-public func map(type: MPSType.Type, lambda: String, source: [String: Symbol]) throws -> Symbol {
+public func map(type: XType.Type, lambda: String, source: [String: Symbol]) throws -> Symbol {
 	return try Map(type: type, lambda: lambda, source: source)
 }
+*/

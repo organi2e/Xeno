@@ -21,6 +21,67 @@ kernel void \(__kernel__)(
 	if ( __index__ < \(__count__) ) dst [ __index__ ] = src [ __index__ ];
 }
 """
+struct ByteCopy {
+	let src: Sym
+	let dst: Sym
+}
+extension ByteCopy : Task {
+	public func eval(commandBuffer: MTLCommandBuffer) throws {
+		assert(src.device === commandBuffer.device)
+		assert(dst.device === commandBuffer.device)
+		let from: MTLBuffer = try src.eval(commandBuffer: commandBuffer)
+		let to: MTLBuffer = try dst.eval(commandBuffer: commandBuffer)
+		let encoder: MTLBlitCommandEncoder = try commandBuffer.makeBlitCommandEncoder()
+		encoder.copy(from: from, sourceOffset: 0, to: to, destinationOffset: 0, size: min(src.size, dst.size))
+		encoder.endEncoding()
+	}
+}
+struct TypeCastCopy {
+	let pipeline: MTLComputePipelineState
+	let src: Sym
+	let dst: Sym
+	let threads: MTLSize
+	let groups: MTLSize
+	init(src s: Sym, dst d: Sym) throws {
+		let count: Int = min(s.length, d.length)
+		let code: String = __template__
+			.replacingOccurrences(of: __srctype__, with: s.xtype.description)
+			.replacingOccurrences(of: __dsttype__, with: d.xtype.description)
+		let library: MTLLibrary = try s.device.makeLibrary(source: code, options: nil)
+		let constantValues: MTLFunctionConstantValues = MTLFunctionConstantValues().binding(value: uint(count), for: __count__)
+		let function: MTLFunction = try library.makeFunction(name: __kernel__, constantValues: constantValues)
+		pipeline = try d.device.makeComputePipelineState(function: function)
+		src = s
+		dst = d
+		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
+		groups = MTLSize(width: (count-1)/threads.width+1, height: 1, depth: 1)
+	}
+}
+extension TypeCastCopy : Task {
+	public func eval(commandBuffer: MTLCommandBuffer) throws {
+		assert(pipeline.device === commandBuffer.device)
+		let from: MTLBuffer = try src.eval(commandBuffer: commandBuffer)
+		let to: MTLBuffer = try dst.eval(commandBuffer: commandBuffer)
+		let encoder: MTLComputeCommandEncoder = try commandBuffer.makeComputeCommandEncoder()
+		encoder.setComputePipelineState(pipeline)
+		encoder.setBuffer(to, offset: 0, index: 0)
+		encoder.setBuffer(from, offset: 0, index: 1)
+		encoder.dispatchThreadgroups(groups, threadsPerThreadgroup: threads)
+		encoder.endEncoding()
+	}
+}
+public func copying(from src: Sym, to dst: Sym) throws -> Task {
+	assert(src.device === dst.device)
+	assert(src.rows == dst.rows)
+	assert(src.columns == dst.columns)
+	switch src.xtype == dst.xtype {
+	case true:
+		return ByteCopy(src: src, dst: dst)
+	case false:
+		return try TypeCastCopy(src: src, dst: dst)
+	}
+}
+/*
 struct ByteCopyTask {
 	let src: Symbol
 	let dst: Symbol
@@ -52,8 +113,6 @@ extension MatrixCopy {
 	func execute(commandBuffer: MTLCommandBuffer) throws {
 		let from: MPSArray = try src.eval(commandBuffer: commandBuffer)
 		let to: MPSArray = try dst.eval(commandBuffer: commandBuffer)
-		let descriptor: MPSMatrixCopyDescriptor = MPSMatrixCopyDescriptor.init(sourceMatrix: <#T##MPSMatrix#>, destinationMatrix: <#T##MPSMatrix#>, offsets: <#T##MPSMatrixCopyOffsets#>)
-		kernel.encode(commandBuffer: commandBuffer, copyDescriptor: <#T##MPSMatrixCopyDescriptor#>)
 	}
 }
 struct TypeCastTask{
@@ -101,3 +160,4 @@ func copy(from: Symbol, to: Symbol) throws -> Task {
 		return ByteCopyTask(src: from, dst: to)
 	}
 }
+*/

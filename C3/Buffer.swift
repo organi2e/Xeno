@@ -6,6 +6,59 @@
 //
 import Accelerate
 import MetalPerformanceShaders
+public struct Buf<X> where X : XType {
+	public let rows: Int
+	public let columns: Int
+	let buffer: MTLBuffer
+}
+extension Buf : Sym {
+	public var xtype: XType.Type {
+		return X.self
+	}
+	public var device: MTLDevice {
+		return buffer.device
+	}
+	public func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer {
+		return buffer
+	}
+}
+extension Buf {
+	public subscript(_ index: Int) -> X {
+		get {
+			assert(0 <= index && index < rows * columns)
+			return buffer.contents().assumingMemoryBound(to: X.self).advanced(by: index).pointee
+		}
+		set {
+			assert(0 <= index && index < rows * columns)
+			buffer.contents().assumingMemoryBound(to: X.self).advanced(by: index).pointee = newValue
+		}
+	}
+	public subscript(_ r: Int, _ c: Int) -> X {
+		get {
+			assert(0 <= r && r < rows)
+			assert(0 <= c && c < columns)
+			let index: Int = r * columns + c
+			return buffer.contents().assumingMemoryBound(to: X.self).advanced(by: index).pointee
+		}
+		set {
+			assert(0 <= r && r < rows)
+			assert(0 <= c && c < columns)
+			let index: Int = r * columns + c
+			buffer.contents().assumingMemoryBound(to: X.self).advanced(by: index).pointee = newValue
+		}
+	}
+}
+extension Context {
+	public func makeMatrix<X>(rows: Int, columns: Int) throws -> Buf<X> where X : XType {
+		guard let buffer: MTLBuffer = device.makeBuffer(length: rows * columns * X.stride, options: .storageModeShared) else {
+			throw ErrorCases.any
+		}
+		return Buf<X>(rows: rows, columns: columns, buffer: buffer)
+	}
+	public func makeVector<X>(length: Int) throws -> Buf<X> where X : XType {
+		return try makeMatrix(rows: 1, columns: length)
+	}
+}
 public protocol MPSArray {
 	var count: Int { get }
 	var rows: Int { get }
@@ -37,12 +90,12 @@ extension MPSMatrix: MPSArray {
 	public var count: Int {
 		return matrices
 	}
-	public func fetch<T>(offset: Int) -> T where T : MPSType {
-		return data.contents().advanced(by: offset).assumingMemoryBound(to: T.self).pointee
-	}
-	public func store<T>(offset: Int, newValue: T) where T : MPSType {
-		data.contents().advanced(by: offset).assumingMemoryBound(to: T.self).pointee = newValue
-	}
+//	public func fetch<T>(offset: Int) -> T where T : MPSType {
+//		return data.contents().advanced(by: offset).assumingMemoryBound(to: T.self).pointee
+//	}
+//	public func store<T>(offset: Int, newValue: T) where T : MPSType {
+//		data.contents().advanced(by: offset).assumingMemoryBound(to: T.self).pointee = newValue
+//	}
 	public var width: Int {
 		return matrixBytes
 	}

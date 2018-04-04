@@ -7,12 +7,14 @@
 import Accelerate
 import MetalPerformanceShaders
 public class Context {
+	let runloop: RunLoop
 	let device: MTLDevice
 	let queue: MTLCommandQueue
 	init(device D: MTLDevice) throws {
 		guard let Q: MTLCommandQueue = D.makeCommandQueue() else {
 			throw ErrorCases.any
 		}
+		runloop = .current
 		device = D
 		queue = Q
 	}
@@ -49,35 +51,17 @@ extension MTLCommandBuffer {
 }
 extension Context {
 	func eval(block: @escaping()->Void) throws {
-		let runloop: RunLoop = .current
-		guard let command: MTLCommandBuffer = queue.makeCommandBuffer() else {
-			throw ErrorCases.any
-		}
-		command.addCompletedHandler { (_) in
-			runloop.perform(block)
-		}
-		command.commit()
-	}
-	func eval<T>(symbol x: Symbol) throws -> Buffer<T> where T : MPSType {
-		guard let commandBuffer: MTLCommandBuffer = queue.makeCommandBuffer() else {
-			throw ErrorCases.any
-		}
-		let count: Int = x.count
-		let rows: Int = x.rows
-		let columns: Int = x.columns
+		let commandBuffer: MTLCommandBuffer = try queue.makeCommandBuffer()
+		commandBuffer.addCompletedHandler { (_) in block() }
 		commandBuffer.commit()
-		return try makeBuffer(length: 0)
 	}
-	func eval(symbol: Symbol) throws {
-		guard let commandBuffer: MTLCommandBuffer = queue.makeCommandBuffer() else {
-			throw ErrorCases.any
-		}
+	func eval(task: Task) throws {
+		let commandBuffer: MTLCommandBuffer = try queue.makeCommandBuffer()
+		try task.eval(commandBuffer: commandBuffer)
 		commandBuffer.commit()
 	}
 	func join() throws {
-		guard let commandBuffer: MTLCommandBuffer = queue.makeCommandBuffer() else {
-			throw ErrorCases.any
-		}
+		 let commandBuffer: MTLCommandBuffer = try queue.makeCommandBuffer()
 		commandBuffer.commit()
 		commandBuffer.waitUntilCompleted()
 	}

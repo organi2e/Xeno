@@ -9,17 +9,24 @@ import MetalPerformanceShaders
 public protocol Sym {
 	var rows: Int { get }
 	var columns: Int { get }
-	var transpose: Bool { get }
-	var type: MPSType.Type { get }
+	var xtype: XType.Type { get }
 	var device: MTLDevice { get }
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer
+}
+extension Sym {
+	var length: Int {
+		return rows * columns
+	}
+	var size: Int {
+		return length * xtype.stride
+	}
 }
 public protocol Symbol {
 	var count: Int { get }
 	var rows: Int { get }
 	var columns: Int { get }
 	var transpose: Bool { get }
-	var type: MPSType.Type { get }
+	var type: XType.Type { get }
 	var device: MTLDevice { get }
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MPSArray
 }
