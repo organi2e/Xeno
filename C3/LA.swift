@@ -9,6 +9,7 @@ import MetalPerformanceShaders
 public protocol LazyType {
 	static var from: (UnsafePointer<Self>, la_count_t, la_count_t, la_count_t, la_hint_t, la_attribute_t) -> la_object_t { get }
 	static var to: (UnsafeMutablePointer<Self>, la_count_t, la_object_t) -> la_status_t { get }
+	static var scale: (la_object_t, Self) -> la_object_t { get }
 	
 	static var fromSInt8: (UnsafePointer<Int8>, vDSP_Stride, UnsafeMutablePointer<Self>, vDSP_Stride, vDSP_Length) -> Void { get }
 	static var fromSInt16: (UnsafePointer<Int16>, vDSP_Stride, UnsafeMutablePointer<Self>, vDSP_Stride, vDSP_Length) -> Void { get }
@@ -42,6 +43,7 @@ extension Float32 : LazyType {
 	
 	public static let from = la_matrix_from_float_buffer
 	public static let to = la_matrix_to_float_buffer
+	public static let scale = la_scale_with_float
 	
 	public static let fromSInt8 = vDSP_vflt8
 	public static let fromSInt16 = vDSP_vflt16
@@ -86,6 +88,7 @@ extension Float64 : LazyType {
 	
 	public static let from = la_matrix_from_double_buffer
 	public static let to = la_matrix_to_double_buffer
+	public static let scale = la_scale_with_double
 	
 	public static let fromSInt8 = vDSP_vflt8D
 	public static let fromSInt16 = vDSP_vflt16D
@@ -211,11 +214,11 @@ extension LazyArray {
 		}
 	}
 }
-func *(_ l: Float32, _ r: LazyArray<Float32>) -> LazyArray<Float32>  {
-	return LazyArray(object: la_scale_with_float(r.object, l))
+func *<T>(_ l: T, _ r: LazyArray<T>) -> LazyArray<T> {
+	return LazyArray(object: T.scale(r.object, l))
 }
-func *(_ l: Float64, _ r: LazyArray<Float64>) -> LazyArray<Float64>  {
-	return LazyArray(object: la_scale_with_double(r.object, l))
+func *<T>(_ l: LazyArray<T>, _ r: T) -> LazyArray<T> {
+	return LazyArray(object: T.scale(l.object, r))
 }
 func +<T>(_ l: LazyArray<T>, _ r: LazyArray<T>) -> LazyArray<T> {
 	return LazyArray(object: la_sum(l.object, r.object))

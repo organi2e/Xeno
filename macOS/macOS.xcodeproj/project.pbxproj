@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		874E57DA207608B1009347CD /* Sum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874E57D9207608B1009347CD /* Sum.swift */; };
+		874E57DC207643BE009347CD /* TypeCast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874E57DB207643BE009347CD /* TypeCast.swift */; };
+		874E57DE207647F8009347CD /* Transpose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874E57DD207647F8009347CD /* Transpose.swift */; };
 		875A8C4C206E6D8600A98495 /* C3.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 875A8C42206E6D8600A98495 /* C3.framework */; };
 		875A8C51206E6D8600A98495 /* C3Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C50206E6D8600A98495 /* C3Tests.swift */; };
 		875A8C53206E6D8600A98495 /* C3.h in Headers */ = {isa = PBXBuildFile; fileRef = 875A8C45206E6D8600A98495 /* C3.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -28,6 +31,10 @@
 		875A8C942073648900A98495 /* Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C902073648900A98495 /* Map.swift */; };
 		875A8C962073985500A98495 /* TypeCast.metal in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C952073985500A98495 /* TypeCast.metal */; };
 		875A8C9820739AC100A98495 /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C9720739AC100A98495 /* Task.swift */; };
+		875A8C9A2075EAF300A98495 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C992075EAF300A98495 /* Cache.swift */; };
+		87D48C85207743D100106C13 /* Uniform.metal in Sources */ = {isa = PBXBuildFile; fileRef = 87D48C84207743D100106C13 /* Uniform.metal */; };
+		87D48C8720778D1100106C13 /* Math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D48C8620778D1100106C13 /* Math.swift */; };
+		87D48C89207793E500106C13 /* Special.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D48C88207793E500106C13 /* Special.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +48,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		874E57D9207608B1009347CD /* Sum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Sum.swift; path = ../../C3/Sum.swift; sourceTree = "<group>"; };
+		874E57DB207643BE009347CD /* TypeCast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TypeCast.swift; path = ../../C3/TypeCast.swift; sourceTree = "<group>"; };
+		874E57DD207647F8009347CD /* Transpose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Transpose.swift; path = ../../C3/Transpose.swift; sourceTree = "<group>"; };
 		875A8C42206E6D8600A98495 /* C3.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = C3.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		875A8C45206E6D8600A98495 /* C3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = C3.h; sourceTree = "<group>"; };
 		875A8C46206E6D8600A98495 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -65,6 +75,10 @@
 		875A8C902073648900A98495 /* Map.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Map.swift; path = ../../C3/Map.swift; sourceTree = "<group>"; };
 		875A8C952073985500A98495 /* TypeCast.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; name = TypeCast.metal; path = ../../C3/TypeCast.metal; sourceTree = "<group>"; };
 		875A8C9720739AC100A98495 /* Task.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Task.swift; path = ../../C3/Task.swift; sourceTree = "<group>"; };
+		875A8C992075EAF300A98495 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Cache.swift; path = ../../C3/Cache.swift; sourceTree = "<group>"; };
+		87D48C84207743D100106C13 /* Uniform.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; name = Uniform.metal; path = ../../C3/Uniform.metal; sourceTree = "<group>"; };
+		87D48C8620778D1100106C13 /* Math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Math.swift; path = ../../C3/Math.swift; sourceTree = "<group>"; };
+		87D48C88207793E500106C13 /* Special.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Special.swift; path = ../../C3/Special.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,7 +123,9 @@
 			children = (
 				875A8C60206E6D9800A98495 /* Context.swift */,
 				875A8C62206E6D9800A98495 /* Symbol.swift */,
+				875A8C992075EAF300A98495 /* Cache.swift */,
 				875A8C9720739AC100A98495 /* Task.swift */,
+				874E57D9207608B1009347CD /* Sum.swift */,
 				875A8C8E2073648900A98495 /* CopyTask.swift */,
 				875A8C902073648900A98495 /* Map.swift */,
 				875A8C8F2073648900A98495 /* Square.metal */,
@@ -117,13 +133,18 @@
 				875A8C5B206E6D9700A98495 /* Buffer.swift */,
 				875A8C65206E6D9900A98495 /* Command.swift */,
 				875A8C64206E6D9800A98495 /* Distribution.swift */,
-				875A8C5C206E6D9700A98495 /* LA.swift */,
 				875A8C61206E6D9800A98495 /* Matmul.swift */,
 				875A8C5D206E6D9800A98495 /* Normal.metal */,
 				875A8C63206E6D9800A98495 /* Normal.swift */,
 				875A8C5E206E6D9800A98495 /* Scalar.swift */,
 				875A8C5F206E6D9800A98495 /* Uniform.swift */,
+				87D48C84207743D100106C13 /* Uniform.metal */,
+				874E57DB207643BE009347CD /* TypeCast.swift */,
 				875A8C952073985500A98495 /* TypeCast.metal */,
+				874E57DD207647F8009347CD /* Transpose.swift */,
+				87D48C8620778D1100106C13 /* Math.swift */,
+				87D48C88207793E500106C13 /* Special.swift */,
+				875A8C5C206E6D9700A98495 /* LA.swift */,
 				875A8C5A206E6D9700A98495 /* C3.swift */,
 				875A8C45206E6D8600A98495 /* C3.h */,
 				875A8C46206E6D8600A98495 /* Info.plist */,
@@ -255,12 +276,19 @@
 				875A8C6A206E6D9900A98495 /* Scalar.swift in Sources */,
 				875A8C942073648900A98495 /* Map.swift in Sources */,
 				875A8C70206E6D9900A98495 /* Distribution.swift in Sources */,
+				87D48C89207793E500106C13 /* Special.swift in Sources */,
+				874E57DC207643BE009347CD /* TypeCast.swift in Sources */,
+				87D48C85207743D100106C13 /* Uniform.metal in Sources */,
+				87D48C8720778D1100106C13 /* Math.swift in Sources */,
+				874E57DA207608B1009347CD /* Sum.swift in Sources */,
+				874E57DE207647F8009347CD /* Transpose.swift in Sources */,
 				875A8C66206E6D9900A98495 /* C3.swift in Sources */,
 				875A8C932073648900A98495 /* Square.metal in Sources */,
 				875A8C6C206E6D9900A98495 /* Context.swift in Sources */,
 				875A8C67206E6D9900A98495 /* Buffer.swift in Sources */,
 				875A8C6E206E6D9900A98495 /* Symbol.swift in Sources */,
 				875A8C6F206E6D9900A98495 /* Normal.swift in Sources */,
+				875A8C9A2075EAF300A98495 /* Cache.swift in Sources */,
 				875A8C922073648900A98495 /* CopyTask.swift in Sources */,
 				875A8C69206E6D9900A98495 /* Normal.metal in Sources */,
 				875A8C912073648900A98495 /* Square.swift in Sources */,

@@ -6,10 +6,15 @@
 //
 import Accelerate
 import MetalPerformanceShaders
-public struct Buf<X> where X : XType {
+public class Buf<X> where X : XType {
 	public let rows: Int
 	public let columns: Int
 	let buffer: MTLBuffer
+	init(device: MTLDevice, rows r: Int, columns c: Int) throws {
+		rows = r
+		columns = c
+		buffer = try device.makeBuffer(length: rows * columns * X.stride, options: .storageModeShared)
+	}
 }
 extension Buf : Sym {
 	public var xtype: XType.Type {
@@ -48,15 +53,25 @@ extension Buf {
 		}
 	}
 }
+extension Buf {
+	var array: Array<X> {
+		return Array(UnsafeBufferPointer(start: buffer.contents().assumingMemoryBound(to: X.self), count: rows * columns))
+	}
+}
+extension Buf where X == Float32 {
+	func fetch() -> la_object_t {
+		return la_matrix_from_float_buffer_nocopy(buffer.contents().assumingMemoryBound(to: X.self), la_count_t(rows), la_count_t(columns), la_count_t(columns), .none, nil, .default)
+	}
+	func store(value: la_object_t) {
+		assert(rows == Int(la_matrix_rows(value)))
+		assert(columns == Int(la_matrix_cols(value)))
+		let status: la_status_t = la_matrix_to_float_buffer(buffer.contents().assumingMemoryBound(to: X.self), la_count_t(columns), value)
+		assert(status == .success)
+	}
+}
 extension Context {
 	public func makeMatrix<X>(rows: Int, columns: Int) throws -> Buf<X> where X : XType {
-		guard let buffer: MTLBuffer = device.makeBuffer(length: rows * columns * X.stride, options: .storageModeShared) else {
-			throw ErrorCases.any
-		}
-		return Buf<X>(rows: rows, columns: columns, buffer: buffer)
-	}
-	public func makeVector<X>(length: Int) throws -> Buf<X> where X : XType {
-		return try makeMatrix(rows: 1, columns: length)
+		return try Buf<X>(device: device, rows: rows, columns: columns)
 	}
 }
 public protocol MPSArray {

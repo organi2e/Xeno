@@ -18,7 +18,7 @@ kernel void \(__kernel__)(
 	device \(__dsttype__) * const dst [[ buffer(0) ]],
 	device \(__srctype__) const * const src [[ buffer(1) ]],
 	uint const __index__ [[ thread_position_in_grid ]]) {
-	if ( __index__ < \(__count__) ) dst [ __index__ ] = src [ __index__ ];
+	if ( \(__index__) < \(__count__) ) dst [ \(__index__) ] = src [ \(__index__) ];
 }
 """
 struct ByteCopy {
@@ -27,12 +27,11 @@ struct ByteCopy {
 }
 extension ByteCopy : Task {
 	public func eval(commandBuffer: MTLCommandBuffer) throws {
-		assert(src.device === commandBuffer.device)
-		assert(dst.device === commandBuffer.device)
 		let from: MTLBuffer = try src.eval(commandBuffer: commandBuffer)
 		let to: MTLBuffer = try dst.eval(commandBuffer: commandBuffer)
+		assert(from.length == to.length)
 		let encoder: MTLBlitCommandEncoder = try commandBuffer.makeBlitCommandEncoder()
-		encoder.copy(from: from, sourceOffset: 0, to: to, destinationOffset: 0, size: min(src.size, dst.size))
+		encoder.copy(from: from, sourceOffset: 0, to: to, destinationOffset: 0, size: min(from.length, to.length))
 		encoder.endEncoding()
 	}
 }
@@ -70,14 +69,13 @@ extension TypeCastCopy : Task {
 		encoder.endEncoding()
 	}
 }
-public func copying(from src: Sym, to dst: Sym) throws -> Task {
+public func store(to dst: Sym, from src: Sym) throws -> Task {
 	assert(src.device === dst.device)
 	assert(src.rows == dst.rows)
 	assert(src.columns == dst.columns)
-	switch src.xtype == dst.xtype {
-	case true:
+	if src.xtype == dst.xtype {
 		return ByteCopy(src: src, dst: dst)
-	case false:
+	} else {
 		return try TypeCastCopy(src: src, dst: dst)
 	}
 }

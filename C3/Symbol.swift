@@ -20,6 +20,9 @@ extension Sym {
 	var size: Int {
 		return length * xtype.stride
 	}
+	var descriptor: MPSMatrixDescriptor {
+		return MPSMatrixDescriptor(rows: rows, columns: columns, rowBytes: columns * xtype.stride, dataType: xtype.mpsType)
+	}
 }
 public protocol Symbol {
 	var count: Int { get }

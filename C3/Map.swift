@@ -32,7 +32,8 @@ kernel void \(__kernel__)(
 	}
 }
 """
-class Map<X> where X : XType {
+class Map {
+	let xtype: XType.Type
 	let pipeline: MTLComputePipelineState
 	let threads: MTLSize
 	let groups: MTLSize
@@ -40,7 +41,8 @@ class Map<X> where X : XType {
 	let offsets: [Int]
 	let range: Range<Int>
 	let descriptor: MPSMatrixDescriptor
-	init(lambda: String, source S: [String: Sym], extra: String = "") throws {
+	var last: (MTLCommandBuffer, MTLBuffer)?
+	init(type: XType.Type, lambda: String, source S: [String: Sym], extra: String = "") throws {
 		guard let (_, primary): (String, Sym) = S.first else {
 			throw ErrorCases.any
 		}
@@ -59,7 +61,7 @@ class Map<X> where X : XType {
 		}
 		let store: String = "\(__name__) [ \(__index__) ] = \(lambda)"
 		let code: String = __template__
-			.replacingOccurrences(of: __type__, with: X.description)
+			.replacingOccurrences(of: __type__, with: type.description)
 			.replacingOccurrences(of: __argument__, with: argument.map { $0.0 }.joined(separator: ",\r\n\t"))
 			.replacingOccurrences(of: __extra__, with: extra)
 			.replacingOccurrences(of: __fetch__, with: argument.map { $0.1 }.joined(separator: ";\r\n\t\t"))
@@ -67,19 +69,17 @@ class Map<X> where X : XType {
 		let library: MTLLibrary = try primary.device.makeLibrary(source: code, options: nil)
 		let constantValues: MTLFunctionConstantValues = MTLFunctionConstantValues().binding(value: uint(length), for: __count__)
 		let function: MTLFunction = try library.makeFunction(name: __kernel__, constantValues: constantValues)
+		xtype = type
 		pipeline = try primary.device.makeComputePipelineState(function: function)
 		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
 		groups = MTLSize(width: (length-1)/threads.width+1, height: 1, depth: 1)
 		inputs = source.map { $1 }
 		offsets = [Int](repeating: 0, count: inputs.count)
 		range = 1..<(1+inputs.count)
-		descriptor = MPSMatrixDescriptor(rows: primary.rows, columns: primary.columns, rowBytes: primary.columns * X.stride, dataType: X.mpsType)
+		descriptor = MPSMatrixDescriptor(rows: primary.rows, columns: primary.columns, rowBytes: primary.columns * xtype.stride, dataType: xtype.mpsType)
 	}
 }
 extension Map: Sym {
-	var xtype: XType.Type {
-		return X.self
-	}
 	var rows: Int {
 		return descriptor.rows
 	}
@@ -90,20 +90,25 @@ extension Map: Sym {
 		return pipeline.device
 	}
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer {
-		assert(device === commandBuffer.device)
-		let matrix: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
-		let buffers: [MTLBuffer] = try inputs.map { try $0.eval(commandBuffer: commandBuffer) }
-		let encoder: MTLComputeCommandEncoder = try commandBuffer.makeComputeCommandEncoder()
-		encoder.setComputePipelineState(pipeline)
-		encoder.setBuffer(matrix.data, offset: 0, index: 0)
-		encoder.setBuffers(buffers, offsets: offsets, range: range)
-		encoder.dispatchThreadgroups(groups, threadsPerThreadgroup: threads)
-		encoder.endEncoding()
-		return matrix.data
+		if let (command, buffer): (MTLCommandBuffer, MTLBuffer) = last, command === commandBuffer {
+			return buffer
+		} else {
+			assert(device === commandBuffer.device)
+			let matrix: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
+			let buffers: [MTLBuffer] = try inputs.map { try $0.eval(commandBuffer: commandBuffer) }
+			let encoder: MTLComputeCommandEncoder = try commandBuffer.makeComputeCommandEncoder()
+			encoder.setComputePipelineState(pipeline)
+			encoder.setBuffer(matrix.data, offset: 0, index: 0)
+			encoder.setBuffers(buffers, offsets: offsets, range: range)
+			encoder.dispatchThreadgroups(groups, threadsPerThreadgroup: threads)
+			encoder.endEncoding()
+			last = (commandBuffer, matrix.data)
+			return matrix.data
+		}
 	}
 }
-public func map<X>(type: X.Type, lambda: String, source: [String: Sym], extra: String = "") throws -> Sym where X : XType {
-	return try Map<X>(lambda: lambda, source: source, extra: extra)
+public func map(type: XType.Type, lambda: String, source: [String: Sym], extra: String = "") throws -> Sym {
+	return try Map(type: type, lambda: lambda, source: source, extra: extra)
 }
 /*
 class Map {

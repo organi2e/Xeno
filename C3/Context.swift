@@ -24,6 +24,15 @@ extension Context {
 		return try queue.makeCommandBuffer(caller: caller)
 	}
 }
+extension MTLDevice {
+	func makeBuffer(length: Int, options: MTLResourceOptions, caller: String = #function) throws -> MTLBuffer {
+		guard let buffer: MTLBuffer = makeBuffer(length: length, options: options) else {
+			throw ErrorCases.any
+		}
+		buffer.label = caller
+		return buffer
+	}
+}
 extension MTLCommandQueue {
 	func makeCommandBuffer(caller: String = #function) throws -> MTLCommandBuffer {
 		guard let commandBuffer: MTLCommandBuffer = makeCommandBuffer() else {
@@ -50,6 +59,14 @@ extension MTLCommandBuffer {
 	}
 }
 extension Context {
+	func eval<X>(symbol: Sym) throws -> Buf<X> where X : XType {
+		let matrix: Buf<X> = try makeMatrix(rows: symbol.rows, columns: symbol.columns)
+		let commandBuffer: MTLCommandBuffer = try queue.makeCommandBuffer()
+		try store(to: matrix, from: symbol).eval(commandBuffer: commandBuffer)
+		commandBuffer.commit()
+		commandBuffer.waitUntilCompleted()
+		return matrix
+	}
 	func eval(block: @escaping()->Void) throws {
 		let commandBuffer: MTLCommandBuffer = try queue.makeCommandBuffer()
 		commandBuffer.addCompletedHandler { (_) in block() }
