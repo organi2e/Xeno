@@ -6,35 +6,53 @@
 //
 import Accelerate
 import MetalPerformanceShaders
-private let __kernel__: String = "__typecast__"
-private let __index__: String = "__index__"
-private let __count__: String = "__count__"
-private let __srctype__: String = "__srctype__"
-private let __dsttype__: String = "__dsttype__"
-private let __template__: String = """
-using namespace metal;
-constant uint \(__count__) [[ function_constant(0) ]];
-kernel void \(__kernel__)(
-	device \(__dsttype__) * const dst [[ buffer(0) ]],
-	device \(__srctype__) const * const src [[ buffer(1) ]],
-	uint const __index__ [[ thread_position_in_grid ]]) {
-	if ( \(__index__) < \(__count__) ) dst [ \(__index__) ] = src [ \(__index__) ];
-}
-"""
 struct ByteCopy {
 	let src: Sym
 	let dst: Sym
 }
 extension ByteCopy : Task {
 	public func eval(commandBuffer: MTLCommandBuffer) throws {
+		assert( src.xtype == dst.xtype )
+		assert( (src.rows, src.columns) == (dst.rows, dst.columns) )
 		let from: MTLBuffer = try src.eval(commandBuffer: commandBuffer)
 		let to: MTLBuffer = try dst.eval(commandBuffer: commandBuffer)
-		assert(from.length == to.length)
 		let encoder: MTLBlitCommandEncoder = try commandBuffer.makeBlitCommandEncoder()
 		encoder.copy(from: from, sourceOffset: 0, to: to, destinationOffset: 0, size: min(from.length, to.length))
 		encoder.endEncoding()
 	}
 }
+struct TypeCastCopy {
+	let xtype: XType.Type
+	let descriptor: MPSMatrixDescriptor
+	let pipeline: MTLComputePipelineState
+	let threads: MTLSize
+	let groups: MTLSize
+	let to: Sym
+	let from: Sym
+	init(target: Sym, source: Sym) throws {
+		
+		assert( target.device === source.device )
+		assert( target.xtype != source.xtype )
+		assert( ( target.rows, target.columns ) == ( source.rows, source.columns ) )
+		
+		let device: MTLDevice = target.device
+		let rows: Int = target.rows
+		let columns: Int = target.columns
+		let length: Int = rows * columns
+		let library: MTLLibrary = try device.makeDefaultLibrary(bundle: Bundle(for: Context.self))
+		let constantValues: MTLFunctionConstantValues = MTLFunctionConstantValues()
+			.binding(value: uint(length), for: "count")
+		let function: MTLFunction = try library.makeFunction(name: "typecast_\(target.xtype.description)_\(source.xtype.description)", constantValues: constantValues)
+		xtype = target.xtype
+		descriptor = MPSMatrixDescriptor(rows: rows, columns: columns, rowBytes: columns * xtype.stride, dataType: xtype.mpsType)
+		pipeline = try device.makeComputePipelineState(function: function)
+		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
+		groups = MTLSize(width: (length-1)/threads.width+1, height: 1, depth: 1)
+		to = target
+		from = source
+	}
+}
+/*
 struct TypeCastCopy {
 	let pipeline: MTLComputePipelineState
 	let src: Sym
@@ -56,15 +74,16 @@ struct TypeCastCopy {
 		groups = MTLSize(width: (count-1)/threads.width+1, height: 1, depth: 1)
 	}
 }
+*/
 extension TypeCastCopy : Task {
 	public func eval(commandBuffer: MTLCommandBuffer) throws {
 		assert(pipeline.device === commandBuffer.device)
-		let from: MTLBuffer = try src.eval(commandBuffer: commandBuffer)
-		let to: MTLBuffer = try dst.eval(commandBuffer: commandBuffer)
+		let target: MTLBuffer = try to.eval(commandBuffer: commandBuffer)
+		let source: MTLBuffer = try from.eval(commandBuffer: commandBuffer)
 		let encoder: MTLComputeCommandEncoder = try commandBuffer.makeComputeCommandEncoder()
 		encoder.setComputePipelineState(pipeline)
-		encoder.setBuffer(to, offset: 0, index: 0)
-		encoder.setBuffer(from, offset: 0, index: 1)
+		encoder.setBuffer(target, offset: 0, index: 0)
+		encoder.setBuffer(source, offset: 0, index: 1)
 		encoder.dispatchThreadgroups(groups, threadsPerThreadgroup: threads)
 		encoder.endEncoding()
 	}
@@ -76,7 +95,7 @@ public func store(to dst: Sym, from src: Sym) throws -> Task {
 	if src.xtype == dst.xtype {
 		return ByteCopy(src: src, dst: dst)
 	} else {
-		return try TypeCastCopy(src: src, dst: dst)
+		return try TypeCastCopy(target: dst, source: src)
 	}
 }
 /*

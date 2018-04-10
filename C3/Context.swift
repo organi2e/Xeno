@@ -8,15 +8,16 @@ import Accelerate
 import MetalPerformanceShaders
 public class Context {
 	let runloop: RunLoop
+	let bundle: Bundle
 	let device: MTLDevice
+	let library: MTLLibrary
 	let queue: MTLCommandQueue
 	init(device D: MTLDevice) throws {
-		guard let Q: MTLCommandQueue = D.makeCommandQueue() else {
-			throw ErrorCases.any
-		}
 		runloop = .current
+		bundle = Bundle(for: Context.self)
 		device = D
-		queue = Q
+		queue = try device.makeCommandQueue()
+		library = try device.makeDefaultLibrary(bundle: bundle)
 	}
 }
 extension Context {
@@ -25,6 +26,13 @@ extension Context {
 	}
 }
 extension MTLDevice {
+	func makeCommandQueue(caller: String = #function) throws -> MTLCommandQueue {
+		guard let queue: MTLCommandQueue = makeCommandQueue() else {
+			throw ErrorCases.any
+		}
+		queue.label = caller
+		return queue
+	}
 	func makeBuffer(length: Int, options: MTLResourceOptions, caller: String = #function) throws -> MTLBuffer {
 		guard let buffer: MTLBuffer = makeBuffer(length: length, options: options) else {
 			throw ErrorCases.any

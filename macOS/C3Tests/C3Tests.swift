@@ -7,8 +7,55 @@
 import Accelerate
 import XCTest
 @testable import C3
+extension la_hint_t {
+	static let none: la_hint_t = la_hint_t(LA_NO_HINT)
+}
+extension la_attribute_t {
+	static let `default`: la_attribute_t = la_attribute_t(LA_DEFAULT_ATTRIBUTES)
+}
 extension String: Error { }
 class C3Tests: XCTestCase {
+	private let rows: Int = 64
+	private let columns: Int = 64
+	func evalv(rows: Int, columns: Int, error: Float32, f: (la_object_t, la_object_t, la_object_t)->la_object_t, g: (Sym, Sym, Sym)throws->Sym) {
+		do {
+			guard let device: MTLDevice = MTLCreateSystemDefaultDevice() else { throw "no device" }
+			let context: Context = try Context(device: device)
+			let a: Buf<Float32> = try context.eval(symbol: context.makeUniform(type: Float32.self, rows: rows, columns: columns))
+		} catch {
+			XCTFail(error.localizedDescription)
+		}
+	}
+	func evals(rows: Int, columns: Int, error: Float32, f: (Float32)->Float32, block: (Sym)throws->Sym) {
+		do {
+			guard let device: MTLDevice = MTLCreateSystemDefaultDevice() else { throw "no device" }
+			let context: Context = try Context(device: device)
+			let src: Buf<Float32> = try context.eval(symbol: context.makeUniform(type: Float32.self, rows: rows, columns: columns))
+			let dst: Buf<Float32> = try context.eval(symbol: block(src))
+			try context.join()
+			let src_mat: la_object_t = la_matrix_from_float_buffer(src.array.map(f), la_count_t(rows), la_count_t(columns), la_count_t(columns), .none, .default)
+			let dst_mat: la_object_t = dst.fetch()
+			let Δ: Float32 = la_norm_as_float(la_difference(src_mat, dst_mat), la_norm_t(LA_L2_NORM))
+			XCTAssert(Δ/sqrt(Float(rows*columns))<error)
+		} catch {
+			XCTFail(error.localizedDescription)
+		}
+	}
+	func evalv(rows: Int, columns: Int, error: Float32, f: (la_object_t)->la_object_t, block: (Sym)throws->Sym) {
+		do {
+			guard let device: MTLDevice = MTLCreateSystemDefaultDevice() else { throw "no device" }
+			let context: Context = try Context(device: device)
+			let src: Buf<Float32> = try context.eval(symbol: context.makeUniform(type: Float32.self, rows: rows, columns: columns))
+			let dst: Buf<Float32> = try context.eval(symbol: block(src))
+			try context.join()
+			let src_mat: la_object_t = f(src.fetch())
+			let dst_mat: la_object_t = dst.fetch()
+			let Δ: Float32 = la_norm_as_float(la_difference(src_mat, dst_mat), la_norm_t(LA_L2_NORM))
+			XCTAssert(Δ/sqrt(Float(rows*columns))<error)
+		} catch {
+			XCTFail(error.localizedDescription)
+		}
+	}
 	func eval(block: (Context)throws->Void) {
 		do {
 			guard let device: MTLDevice = MTLCreateSystemDefaultDevice() else { throw "no device" }
@@ -20,51 +67,49 @@ class C3Tests: XCTestCase {
 		}
 	}
 	func testUniform() {
-		eval { context in 
-			let rows: Int = 1024
-			let columns: Int = 1024
-			let a: Sym = try context.makeUniform(type: Float32.self, rows: rows, columns: columns)
-			let b: Buf<Float32> = try context.eval(symbol: a)
-			let c: la_object_t = b.fetch()
-			var x: la_object_t = c
-			print(x.array.reduce(0, +) / Float(rows*columns))
-			x = la_elementwise_product(x, c)
-			print(x.array.reduce(0, +) / Float(rows*columns))
-			x = la_elementwise_product(x, c)
-			print(x.array.reduce(0, +) / Float(rows*columns))
-			x = la_elementwise_product(x, c)
-			print(x.array.reduce(0, +) / Float(rows*columns))
-			x = la_elementwise_product(x, c)
+		eval { context in
+			let K: Int = Int(arc4random_uniform(32768)) + 32768
+			let a: Buf<Float32> = try context.eval(symbol: context.makeUniform(type: Float32.self, rows: 1, columns: K))
+			let c: la_object_t = a.fetch()
+			var s: la_object_t = a.fetch()
 			
+			let m1: Float32 = s.array.reduce(0, +) / Float32(K)
+			XCTAssert(abs(log(m1*2))<1e-1, "\(m1, log(m1*2))")
 			
+			s = la_elementwise_product(s, c)
+			let m2: Float32 = s.array.reduce(0, +) / Float32(K)
+			XCTAssert(abs(log(m2*3))<1e-1, "\(m2, log(m2*3))")
+			
+			s = la_elementwise_product(s, c)
+			let m3: Float32 = s.array.reduce(0, +) / Float32(K)
+			XCTAssert(abs(log(m3*4))<1e-1, "\(m3, log(m3*4))")
+			
+			s = la_elementwise_product(s, c)
+			let m4: Float32 = s.array.reduce(0, +) / Float32(K)
+			XCTAssert(abs(log(m4*5))<1e-1, "\(m4, log(m4*5))")
 		}
 	}
-	func testDot() {
-		eval { context in
-			let N: Int = 64
-			let a: Buf<Float32> = try context.makeMatrix(rows: 1, columns: 64)
-			let b: Buf<Float32> = try context.makeMatrix(rows: 64, columns: 1)
-			(0..<N).forEach {
-				a[$0] = Float32($0)
-				b[$0] = Float32($0)
-			}
-			let c: Buf<Float32> = try context.eval(symbol: matmul(type: Float32.self, a, b))
-			print(c.array)
-		}
+	func testErfinv() {
+		evals(rows: rows, columns: columns, error: 1e-3, f: {$0}, block: { try erfinv(erf($0)) })
 	}
 	func testErf() {
-		eval { context in
-			let N: Int = 64
-			let u: Sym = try context.makeUniform(type: Float32.self, rows: 1, columns: N)
-			let a: Buf<Float32> = try context.makeMatrix(rows: 1, columns: N)
-			try context.eval(task: store(to: a, from: u))
-			let b: Sym = try erfinv(a)
-			let c: Buf<Float32> = try context.eval(symbol: b)
-			try context.eval {
-				print(a.array)
-				print(c.array.map(erff))
-			}
-		}
+		evals(rows: rows, columns: columns, error: 1e-3, f: erff, block: erf)
+	}
+	func testCos() {
+		evalv(rows: rows, columns: columns, error: 1e-3, f: cosf, block: cos)
+	}
+	func testSin() {
+		evalv(rows: rows, columns: columns, error: 1e-3, f: sinf, block: sin)
+	}
+	func testTan() {
+		evalv(rows: rows, columns: columns, error: 1e-3, f: tanf, block: tan)
+	}
+	func testFMA() {
+		let a: Float32 = 5
+		let b: Float32 = 4
+		let la: la_object_t = la_splat_from_float(a, .default)
+		let lb: la_object_t = la_splat_from_float(b, .default)
+		evalv(rows: rows, columns: columns, error: 1e-6, f: { la_sum(la_scale_with_float($0, a), lb) }, block: { try fma($0, a, b) } )
 	}
 	/*
 	func testMap() {

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8723D2FE207C7D1D00281B4C /* FMA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8723D2FD207C7D1D00281B4C /* FMA.swift */; };
+		8723D300207C7D2900281B4C /* FMA.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8723D2FF207C7D2900281B4C /* FMA.metal */; };
+		8726DC9C207B0D2600274BE4 /* General.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8726DC9B207B0D2600274BE4 /* General.metal */; };
 		874E57DA207608B1009347CD /* Sum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874E57D9207608B1009347CD /* Sum.swift */; };
 		874E57DC207643BE009347CD /* TypeCast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874E57DB207643BE009347CD /* TypeCast.swift */; };
 		874E57DE207647F8009347CD /* Transpose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874E57DD207647F8009347CD /* Transpose.swift */; };
@@ -33,8 +36,8 @@
 		875A8C9820739AC100A98495 /* Task.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C9720739AC100A98495 /* Task.swift */; };
 		875A8C9A2075EAF300A98495 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C992075EAF300A98495 /* Cache.swift */; };
 		87D48C85207743D100106C13 /* Uniform.metal in Sources */ = {isa = PBXBuildFile; fileRef = 87D48C84207743D100106C13 /* Uniform.metal */; };
-		87D48C8720778D1100106C13 /* Math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D48C8620778D1100106C13 /* Math.swift */; };
-		87D48C89207793E500106C13 /* Special.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D48C88207793E500106C13 /* Special.swift */; };
+		87D48C8720778D1100106C13 /* General.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D48C8620778D1100106C13 /* General.swift */; };
+		87FF0AF4207B48A300D0BF3D /* Reduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87FF0AF3207B48A200D0BF3D /* Reduce.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +51,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8723D2FD207C7D1D00281B4C /* FMA.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FMA.swift; path = ../../C3/FMA.swift; sourceTree = "<group>"; };
+		8723D2FF207C7D2900281B4C /* FMA.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; name = FMA.metal; path = ../../C3/FMA.metal; sourceTree = "<group>"; };
+		8726DC9B207B0D2600274BE4 /* General.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; name = General.metal; path = ../../C3/General.metal; sourceTree = "<group>"; };
 		874E57D9207608B1009347CD /* Sum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Sum.swift; path = ../../C3/Sum.swift; sourceTree = "<group>"; };
 		874E57DB207643BE009347CD /* TypeCast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TypeCast.swift; path = ../../C3/TypeCast.swift; sourceTree = "<group>"; };
 		874E57DD207647F8009347CD /* Transpose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Transpose.swift; path = ../../C3/Transpose.swift; sourceTree = "<group>"; };
@@ -77,8 +83,8 @@
 		875A8C9720739AC100A98495 /* Task.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Task.swift; path = ../../C3/Task.swift; sourceTree = "<group>"; };
 		875A8C992075EAF300A98495 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Cache.swift; path = ../../C3/Cache.swift; sourceTree = "<group>"; };
 		87D48C84207743D100106C13 /* Uniform.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; name = Uniform.metal; path = ../../C3/Uniform.metal; sourceTree = "<group>"; };
-		87D48C8620778D1100106C13 /* Math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Math.swift; path = ../../C3/Math.swift; sourceTree = "<group>"; };
-		87D48C88207793E500106C13 /* Special.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Special.swift; path = ../../C3/Special.swift; sourceTree = "<group>"; };
+		87D48C8620778D1100106C13 /* General.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = General.swift; path = ../../C3/General.swift; sourceTree = "<group>"; };
+		87FF0AF3207B48A200D0BF3D /* Reduce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Reduce.swift; path = ../../C3/Reduce.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,8 +148,11 @@
 				874E57DB207643BE009347CD /* TypeCast.swift */,
 				875A8C952073985500A98495 /* TypeCast.metal */,
 				874E57DD207647F8009347CD /* Transpose.swift */,
-				87D48C8620778D1100106C13 /* Math.swift */,
-				87D48C88207793E500106C13 /* Special.swift */,
+				87FF0AF3207B48A200D0BF3D /* Reduce.swift */,
+				8723D2FD207C7D1D00281B4C /* FMA.swift */,
+				8723D2FF207C7D2900281B4C /* FMA.metal */,
+				87D48C8620778D1100106C13 /* General.swift */,
+				8726DC9B207B0D2600274BE4 /* General.metal */,
 				875A8C5C206E6D9700A98495 /* LA.swift */,
 				875A8C5A206E6D9700A98495 /* C3.swift */,
 				875A8C45206E6D8600A98495 /* C3.h */,
@@ -218,7 +227,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0920;
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 				TargetAttributes = {
 					875A8C41206E6D8600A98495 = {
 						CreatedOnToolsVersion = 9.2;
@@ -271,20 +280,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8723D2FE207C7D1D00281B4C /* FMA.swift in Sources */,
 				875A8C6B206E6D9900A98495 /* Uniform.swift in Sources */,
 				875A8C962073985500A98495 /* TypeCast.metal in Sources */,
 				875A8C6A206E6D9900A98495 /* Scalar.swift in Sources */,
 				875A8C942073648900A98495 /* Map.swift in Sources */,
 				875A8C70206E6D9900A98495 /* Distribution.swift in Sources */,
-				87D48C89207793E500106C13 /* Special.swift in Sources */,
 				874E57DC207643BE009347CD /* TypeCast.swift in Sources */,
 				87D48C85207743D100106C13 /* Uniform.metal in Sources */,
-				87D48C8720778D1100106C13 /* Math.swift in Sources */,
+				87D48C8720778D1100106C13 /* General.swift in Sources */,
 				874E57DA207608B1009347CD /* Sum.swift in Sources */,
 				874E57DE207647F8009347CD /* Transpose.swift in Sources */,
 				875A8C66206E6D9900A98495 /* C3.swift in Sources */,
+				8726DC9C207B0D2600274BE4 /* General.metal in Sources */,
 				875A8C932073648900A98495 /* Square.metal in Sources */,
 				875A8C6C206E6D9900A98495 /* Context.swift in Sources */,
+				8723D300207C7D2900281B4C /* FMA.metal in Sources */,
 				875A8C67206E6D9900A98495 /* Buffer.swift in Sources */,
 				875A8C6E206E6D9900A98495 /* Symbol.swift in Sources */,
 				875A8C6F206E6D9900A98495 /* Normal.swift in Sources */,
@@ -292,6 +303,7 @@
 				875A8C922073648900A98495 /* CopyTask.swift in Sources */,
 				875A8C69206E6D9900A98495 /* Normal.metal in Sources */,
 				875A8C912073648900A98495 /* Square.swift in Sources */,
+				87FF0AF4207B48A300D0BF3D /* Reduce.swift in Sources */,
 				875A8C68206E6D9900A98495 /* LA.swift in Sources */,
 				875A8C6D206E6D9900A98495 /* Matmul.swift in Sources */,
 				875A8C9820739AC100A98495 /* Task.swift in Sources */,

@@ -8,14 +8,12 @@
 #include <metal_stdlib>
 using namespace metal;
 constant uint const count [[ function_constant(0) ]];
-kernel void normalize_half_uchar(device half * const y [[ buffer(0) ]],
-								 device uchar const * const x [[ buffer(1) ]],
-								 uint const index [[ thread_position_in_grid ]]) {
-	if ( index < count ) y [ index ] = x [ index ] / 256.0;
+#define NORMALIZE(D, S, scale) kernel void normalize ## _ ## D ## _ ## S (\
+	device D * const y [[ buffer(0) ]],\
+	device S const * const x [[ buffer(1) ]],\
+	uint const index [[ thread_position_in_grid ]]) {\
+	if ( index < count ) y [ index ] = ( D ( x [ index ] ) + 0.5 ) / D ( scale ); \
 }
-kernel void normalize_float_ushort(device float * const y [[ buffer(0) ]],
-								   device ushort const * const x [[ buffer(1) ]],
-								   uint const index [[ thread_position_in_grid ]]) {
-	if ( index < count ) y [ index ] = x [ index ] / 65536.0;
-}
-
+NORMALIZE(half, uchar, 256)
+NORMALIZE(float, uchar, 256)
+NORMALIZE(float, ushort, 65536)

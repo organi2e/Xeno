@@ -44,6 +44,6 @@ extension Sum {
 }
 */
 public func sum(_ s: [Sym]) throws {
-	let rows: Int = s.reduce(0) { max($0, $1.rows) }
-	let columns: Int = s.reduce(0) { max($0, $1.columns) }
+//	let rows: Int = s.reduce(0) { max($0, $1.rows) }
+//	let columns: Int = s.reduce(0) { max($0, $1.columns) }
 }

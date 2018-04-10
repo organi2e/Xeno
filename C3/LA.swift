@@ -268,3 +268,73 @@ extension la_object_t {
 		return array
 	}
 }
+private func invokef(x: la_object_t, f: (UnsafeMutablePointer<Float32>, UnsafePointer<Float32>, UnsafePointer<Int32>)->Void) -> la_object_t {
+	let rows: la_count_t = la_matrix_rows(x)
+	let cols: la_count_t = la_matrix_cols(x)
+	let length: Int = Int(rows * cols)
+	let buffer: UnsafeMutablePointer<Float32> = malloc(length * MemoryLayout<Float32>.stride).assumingMemoryBound(to: Float32.self)
+	let status: la_status_t = la_matrix_to_float_buffer(buffer, cols, x)
+	assert(status == .success)
+	f(buffer, buffer, [Int32(length)])
+	return la_matrix_from_float_buffer_nocopy(buffer, rows, cols, cols, .none, free, .default)
+}
+public func expf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvexpf)
+}
+public func logf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvlogf)
+}
+public func sinf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvsinf)
+}
+public func cosf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvcosf)
+}
+public func tanf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvtanf)
+}
+public func sinhf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvsinhf)
+}
+public func coshf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvcoshf)
+}
+public func tanhf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvtanhf)
+}
+public func sinpif(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvsinpif)
+}
+public func cospif(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvcospif)
+}
+public func tanpif(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvtanpif)
+}
+public func asinf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvasinf)
+}
+public func acosf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvacosf)
+}
+public func atanf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvatanf)
+}
+public func asinhf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvasinhf)
+}
+public func acoshf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvacoshf)
+}
+public func atanhf(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvatanhf)
+}
+public func sinpi(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvsinpif)
+}
+public func cospi(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvcospif)
+}
+public func tanpi(_ x: la_object_t) -> la_object_t {
+	return invokef(x: x, f: vvtanpif)
+}

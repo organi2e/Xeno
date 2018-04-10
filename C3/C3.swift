@@ -18,6 +18,14 @@ public struct Float16 {
 		return 0
 	}
 }
+public protocol XInteger {
+}
+public protocol XSignedInteger: XInteger {
+}
+public protocol XUnsignedInteger: XInteger {
+}
+public protocol XFloat {
+}
 public protocol XType {
 	static var mpsType: MPSDataType { get }
 	static var mtlType: MTLDataType { get }
@@ -66,44 +74,46 @@ func copy<X, L>(from: UnsafePointer<X>, to: UnsafeMutablePointer<L>, count: Int)
 		assertionFailure()
 	}
 }
-extension UInt8: XType {
+extension UInt8: XType, XUnsignedInteger {
 	public static let mpsType: MPSDataType = .uInt8
 	public static let mtlType: MTLDataType = .uchar
 	public static let description: String = "uint"
 }
-extension UInt16: XType {
+extension UInt16: XType, XUnsignedInteger {
 	public static let mpsType: MPSDataType = .uInt16
 	public static let mtlType: MTLDataType = .ushort
 	public static let description: String = "ushort"
 }
-extension UInt32: XType {
+extension UInt32: XType, XUnsignedInteger {
 	public static let mpsType: MPSDataType = .uInt32
 	public static let mtlType: MTLDataType = .uint
 	public static let description: String = "uint"
 }
-extension Int8: XType {
+extension Int8: XType, XSignedInteger {
 	public static let mpsType: MPSDataType = .int8
 	public static let mtlType: MTLDataType = .char
 	public static let description: String = "char"
 }
-extension Int16: XType {
+extension Int16: XType, XSignedInteger {
 	public static let mpsType: MPSDataType = .int16
 	public static let mtlType: MTLDataType = .short
 	public static let description: String = "short"
 }
-extension Float16: XType {
+extension Float16: XType, XFloat {
 	public static let mpsType: MPSDataType = .float16
 	public static let mtlType: MTLDataType = .half
 	public static let description: String = "half"
 }
-extension Float32: XType {
+extension Float32: XType, XFloat {
 	public static let mpsType: MPSDataType = .float32
 	public static let mtlType: MTLDataType = .float
 	public static let description: String = "float"
 }
 extension Bool {
-	static let T: Bool = true
-	static let F: Bool = false
+	public static let T: Bool = true
+	public static let F: Bool = false
+	public static let mtlType: MTLDataType = .bool
+	public static let description: String = "bool"
 }
 typealias MPSType = XType
 extension MTLFunctionConstantValues {

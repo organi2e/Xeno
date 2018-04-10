@@ -32,27 +32,29 @@ kernel void \(__kernel__)(
 	}
 }
 """
-class Map {
+struct Map {
 	let xtype: XType.Type
+	let descriptor: MPSMatrixDescriptor
 	let pipeline: MTLComputePipelineState
-	let threads: MTLSize
-	let groups: MTLSize
 	let inputs: [Sym]
 	let offsets: [Int]
 	let range: Range<Int>
-	let descriptor: MPSMatrixDescriptor
-	var last: (MTLCommandBuffer, MTLBuffer)?
+	let threads: MTLSize
+	let groups: MTLSize
 	init(type: XType.Type, lambda: String, source S: [String: Sym], extra: String = "") throws {
 		guard let (_, primary): (String, Sym) = S.first else {
 			throw ErrorCases.any
 		}
+		let device: MTLDevice = primary.device
+		let rows: Int = primary.rows
+		let columns: Int = primary.columns
 		let source: [(String, Sym)] = S.map {
-			assert(primary.device === $1.device)
-			assert(primary.rows == $1.rows)
-			assert(primary.columns == $1.columns)
+			assert(device === $1.device)
+			assert(rows == $1.rows)
+			assert(columns == $1.columns)
 			return ($0, $1)
 		}
-		let length: Int = primary.rows * primary.columns
+		let length: Int = rows * columns
 		let argument: [(String, String)] = source.enumerated().map {
 			let temp: String = uniq
 			let b: String = "thread \($1.1.xtype.description) const \($1.0) = \(temp) [ \(__index__) ]"
@@ -70,13 +72,13 @@ class Map {
 		let constantValues: MTLFunctionConstantValues = MTLFunctionConstantValues().binding(value: uint(length), for: __count__)
 		let function: MTLFunction = try library.makeFunction(name: __kernel__, constantValues: constantValues)
 		xtype = type
-		pipeline = try primary.device.makeComputePipelineState(function: function)
+		pipeline = try device.makeComputePipelineState(function: function)
 		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
 		groups = MTLSize(width: (length-1)/threads.width+1, height: 1, depth: 1)
 		inputs = source.map { $1 }
-		offsets = [Int](repeating: 0, count: inputs.count)
+		offsets = Array<Int>(repeating: 0, count: inputs.count)
 		range = 1..<(1+inputs.count)
-		descriptor = MPSMatrixDescriptor(rows: primary.rows, columns: primary.columns, rowBytes: primary.columns * xtype.stride, dataType: xtype.mpsType)
+		descriptor = MPSMatrixDescriptor(rows: rows, columns: columns, rowBytes: columns * xtype.stride, dataType: xtype.mpsType)
 	}
 }
 extension Map: Sym {
@@ -90,21 +92,16 @@ extension Map: Sym {
 		return pipeline.device
 	}
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer {
-		if let (command, buffer): (MTLCommandBuffer, MTLBuffer) = last, command === commandBuffer {
-			return buffer
-		} else {
-			assert(device === commandBuffer.device)
-			let matrix: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
-			let buffers: [MTLBuffer] = try inputs.map { try $0.eval(commandBuffer: commandBuffer) }
-			let encoder: MTLComputeCommandEncoder = try commandBuffer.makeComputeCommandEncoder()
-			encoder.setComputePipelineState(pipeline)
-			encoder.setBuffer(matrix.data, offset: 0, index: 0)
-			encoder.setBuffers(buffers, offsets: offsets, range: range)
-			encoder.dispatchThreadgroups(groups, threadsPerThreadgroup: threads)
-			encoder.endEncoding()
-			last = (commandBuffer, matrix.data)
-			return matrix.data
-		}
+		assert(device === commandBuffer.device)
+		let buffers: [MTLBuffer] = try inputs.map { try $0.eval(commandBuffer: commandBuffer) }
+		let matrix: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
+		let encoder: MTLComputeCommandEncoder = try commandBuffer.makeComputeCommandEncoder()
+		encoder.setComputePipelineState(pipeline)
+		encoder.setBuffer(matrix.data, offset: 0, index: 0)
+		encoder.setBuffers(buffers, offsets: offsets, range: range)
+		encoder.dispatchThreadgroups(groups, threadsPerThreadgroup: threads)
+		encoder.endEncoding()
+		return matrix.data
 	}
 }
 public func map(type: XType.Type, lambda: String, source: [String: Sym], extra: String = "") throws -> Sym {

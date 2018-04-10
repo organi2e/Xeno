@@ -10,10 +10,10 @@ public class Buf<X> where X : XType {
 	public let rows: Int
 	public let columns: Int
 	let buffer: MTLBuffer
-	init(device: MTLDevice, rows r: Int, columns c: Int) throws {
+	init(context: Context, rows r: Int, columns c: Int) throws {
 		rows = r
 		columns = c
-		buffer = try device.makeBuffer(length: rows * columns * X.stride, options: .storageModeShared)
+		buffer = try context.device.makeBuffer(length: rows * columns * X.stride, options: .storageModeShared)
 	}
 }
 extension Buf : Sym {
@@ -62,16 +62,16 @@ extension Buf where X == Float32 {
 	func fetch() -> la_object_t {
 		return la_matrix_from_float_buffer_nocopy(buffer.contents().assumingMemoryBound(to: X.self), la_count_t(rows), la_count_t(columns), la_count_t(columns), .none, nil, .default)
 	}
-	func store(value: la_object_t) {
-		assert(rows == Int(la_matrix_rows(value)))
-		assert(columns == Int(la_matrix_cols(value)))
-		let status: la_status_t = la_matrix_to_float_buffer(buffer.contents().assumingMemoryBound(to: X.self), la_count_t(columns), value)
+	func store(object: la_object_t) {
+		assert( la_matrix_rows(object) == la_count_t(rows) )
+		assert( la_matrix_cols(object) == la_count_t(columns) )
+		let status: la_status_t = la_matrix_to_float_buffer(buffer.contents().assumingMemoryBound(to: X.self), la_count_t(columns), object)
 		assert(status == .success)
 	}
 }
 extension Context {
 	public func makeMatrix<X>(rows: Int, columns: Int) throws -> Buf<X> where X : XType {
-		return try Buf<X>(device: device, rows: rows, columns: columns)
+		return try Buf<X>(context: self, rows: rows, columns: columns)
 	}
 }
 public protocol MPSArray {
