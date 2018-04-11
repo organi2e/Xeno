@@ -26,7 +26,7 @@ struct TypeCast {
 		pipeline = try device.makeComputePipelineState(function: function)
 		input = source
 		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
-		groups = MTLSize(width: (length-1)/threads.width, height: 1, depth: 1)
+		groups = MTLSize(width: (length-1)/threads.width+1, height: 1, depth: 1)
 	}
 }
 extension TypeCast: Sym {
