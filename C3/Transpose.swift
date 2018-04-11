@@ -6,7 +6,7 @@
 //
 import Accelerate
 import MetalPerformanceShaders
-class TransposedVector {
+struct TransposedVector {
 	let input: Sym
 	init(input x: Sym) {
 		input = x
@@ -29,12 +29,11 @@ extension TransposedVector : Sym {
 		return try input.eval(commandBuffer: commandBuffer)
 	}
 }
-class TransposedMatrix {
+struct TransposedMatrix {
 	let input: Sym
 	let descriptor: MPSMatrixDescriptor
 	let kernel: MPSMatrixCopy
 	let offsets: MPSMatrixCopyOffsets
-	var last: (MTLCommandBuffer, MTLBuffer)?
 	init(input x: Sym) {
 		input = x
 		descriptor = MPSMatrixDescriptor(rows: x.columns, columns: x.rows, rowBytes: x.rows * x.xtype.stride, dataType: x.xtype.mpsType)
@@ -56,16 +55,11 @@ extension TransposedMatrix : Sym {
 		return input.xtype
 	}
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer {
-		if let (command, buffer): (MTLCommandBuffer, MTLBuffer) = last, command === commandBuffer {
-			return buffer
-		} else {
-			assert(commandBuffer.device === kernel.device)
-			let source: MPSMatrix = try MPSMatrix(buffer: input.eval(commandBuffer: commandBuffer), descriptor: input.descriptor)
-			let matrix: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
-			kernel.encode(commandBuffer: commandBuffer, copyDescriptor: MPSMatrixCopyDescriptor(sourceMatrix: source, destinationMatrix: matrix, offsets: offsets))
-			last = (commandBuffer, matrix.data)
-			return matrix.data
-		}
+		assert(commandBuffer.device === kernel.device)
+		let source: MPSMatrix = try MPSMatrix(buffer: input.eval(commandBuffer: commandBuffer), descriptor: input.descriptor)
+		let matrix: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
+		kernel.encode(commandBuffer: commandBuffer, copyDescriptor: MPSMatrixCopyDescriptor(sourceMatrix: source, destinationMatrix: matrix, offsets: offsets))
+		return matrix.data
 	}
 }
 public func transpose(_ input: Sym) -> Sym {

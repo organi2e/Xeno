@@ -13,15 +13,19 @@ struct Square {
 	let groups: MTLSize
 	let threads: MTLSize
 	init(x: Sym) throws {
-		let length: Int = x.rows * x.columns
-		let constantValues: MTLFunctionConstantValues = MTLFunctionConstantValues().binding(value: uint(length), for: "count")
-		let library: MTLLibrary = try x.device.makeDefaultLibrary(bundle: Bundle(for: Context.self))
+		let device: MTLDevice = x.device
+		let rows: Int = x.rows
+		let columns: Int = x.columns
+		let length: Int = rows * columns
+		let constantValues: MTLFunctionConstantValues = MTLFunctionConstantValues()
+			.binding(value: uint(length), for: "count")
+		let library: MTLLibrary = try device.makeDefaultLibrary(bundle: Bundle(for: Context.self))
 		let function: MTLFunction = try library.makeFunction(name: "square_" + x.xtype.description, constantValues: constantValues)
-		descriptor = MPSMatrixDescriptor(rows: x.rows, columns: x.columns, rowBytes: x.columns * x.xtype.stride, dataType: x.xtype.mpsType)
+		descriptor = MPSMatrixDescriptor(rows: rows, columns: columns, rowBytes: columns * x.xtype.stride, dataType: x.xtype.mpsType)
 		pipeline = try x.device.makeComputePipelineState(function: function)
 		input = x
 		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
-		groups = MTLSize(width: ( length - 1 ) / threads.width + 1, height: 1, depth: 1)
+		groups = MTLSize(width: (length-1)/threads.width+1, height: 1, depth: 1)
 	}
 }
 extension Square : Sym {

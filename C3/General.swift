@@ -22,7 +22,7 @@ struct General {
 		let device: MTLDevice = primary.device
 		let rows: Int = primary.rows
 		let columns: Int = primary.columns
-		assert( { switch $0 { case is Float16.Type, is Float32.Type: return true; default: return false; } } ( primary.xtype ) )
+		assert( primary.xtype is XFloat.Type )
 		assert( S.reduce(true) { $0 && $1.device === device } )
 		assert( S.reduce(true) { $0 && $1.xtype == primary.xtype } )
 		assert( S.reduce(true) { $0 && ($1.rows, $1.columns) == (rows, columns) } )
@@ -35,7 +35,7 @@ struct General {
 		pipeline = try device.makeComputePipelineState(function: library.makeFunction(name: "\(name)_\(xtype.description)", constantValues: constantValues))
 		inputs = S
 		offsets = Array<Int>(repeating: 0, count: inputs.count)
-		range = 1 ..< ( 1 + inputs.count )
+		range = 1..<(1+inputs.count)
 		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
 		groups = MTLSize(width: (length-1)/threads.width+1, height: 1, depth: 1)
 	}

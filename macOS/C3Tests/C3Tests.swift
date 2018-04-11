@@ -66,6 +66,38 @@ class C3Tests: XCTestCase {
 			XCTFail(error.localizedDescription)
 		}
 	}
+	
+	func testNormal() {
+		eval { context in
+			let K: Int = Int(arc4random_uniform(32768)) + 32768
+			let n: Sym = try context.makeStdNormal(type: Float32.self, rows: 1, columns: K)
+			let μ: Float32 = (2 as Float32).squareRoot()
+			let σ: Float32 = .pi
+			let x: Sym = try fma(n, σ, μ)
+			let a: Buf<Float32> = try context.eval(symbol: x)
+			let c: la_object_t = a.fetch()
+			var s: la_object_t = a.fetch()
+			
+			let a1: Float32 = μ
+			let m1: Float32 = s.array.reduce(0, +) / Float32(K)
+			XCTAssert(abs(a1-m1)<1e-1, "\(m1, a1)")
+			
+			s = la_elementwise_product(s, c)
+			let a2: Float32 = μ * μ + σ * σ
+			let m2: Float32 = s.array.reduce(0, +) / Float32(K)
+			XCTAssert(abs(log(m2/a2)) < 1e-2, "\(m2, a2)")
+			
+			s = la_elementwise_product(s, c)
+			let a3: Float32 = μ * μ * μ + 3 * μ * σ * σ
+			let m3: Float32 = s.array.reduce(0, +) / Float32(K)
+			XCTAssert(abs(log(m3/a3)) < 1e-1, "\(m3, a3)")
+			
+			s = la_elementwise_product(s, c)
+			let a4: Float32 = μ * μ * μ * μ + 6 * μ * μ * σ * σ + 3 * σ * σ * σ * σ
+			let m4: Float32 = s.array.reduce(0, +) / Float32(K)
+			XCTAssert(abs(log(m4/a4)) < 1e-1, "\(m4, a4)")
+		}
+	}
 	func testUniform() {
 		eval { context in
 			let K: Int = Int(arc4random_uniform(32768)) + 32768

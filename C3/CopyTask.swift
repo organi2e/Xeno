@@ -4,11 +4,10 @@
 //
 //  Created by Kota Nakano on 4/3/18.
 //
-import Accelerate
 import MetalPerformanceShaders
 struct ByteCopy {
-	let src: Sym
 	let dst: Sym
+	let src: Sym
 }
 extension ByteCopy : Task {
 	public func eval(commandBuffer: MTLCommandBuffer) throws {
@@ -89,11 +88,10 @@ extension TypeCastCopy : Task {
 	}
 }
 public func store(to dst: Sym, from src: Sym) throws -> Task {
-	assert(src.device === dst.device)
-	assert(src.rows == dst.rows)
-	assert(src.columns == dst.columns)
+	assert( dst.device === src.device )
+	assert( ( dst.rows, dst.columns ) == ( src.rows, src.columns ) )
 	if src.xtype == dst.xtype {
-		return ByteCopy(src: src, dst: dst)
+		return ByteCopy(dst: dst, src: src)
 	} else {
 		return try TypeCastCopy(target: dst, source: src)
 	}

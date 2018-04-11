@@ -102,14 +102,12 @@ extension vDOT : Sym {
 		return matrix.data
 	}
 }
-
-class GEMM {
+struct GEMM {
 	let xtype: XType.Type
 	let descriptor: MPSMatrixDescriptor
 	let kernel: MPSMatrixMultiplication
 	let sA: (Sym, MPSMatrixDescriptor)
 	let sB: (Sym, MPSMatrixDescriptor)
-	var last: (MTLCommandBuffer, MTLBuffer)?
 	init(type: XType.Type, A: Sym, B: Sym) {
 		assert( A.device === B.device )
 		assert( A.rows != 1 )
@@ -135,21 +133,15 @@ extension GEMM : Sym {
 		return kernel.device
 	}
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer {
-		if let (command, buffer): (MTLCommandBuffer, MTLBuffer) = last, command === commandBuffer {
-			return buffer
-		} else {
-			assert(commandBuffer.device === kernel.device)
-			let c: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
-			try kernel.encode(commandBuffer: commandBuffer,
-							  leftMatrix: MPSMatrix(buffer: sA.0.eval(commandBuffer: commandBuffer), descriptor: sA.1),
-							  rightMatrix: MPSMatrix(buffer: sB.0.eval(commandBuffer: commandBuffer), descriptor: sB.1),
-							  resultMatrix: c)
-			last = (commandBuffer, c.data)
-			return c.data
-		}
+		let c: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
+		try kernel.encode(commandBuffer: commandBuffer,
+						  leftMatrix: MPSMatrix(buffer: sA.0.eval(commandBuffer: commandBuffer), descriptor: sA.1),
+						  rightMatrix: MPSMatrix(buffer: sB.0.eval(commandBuffer: commandBuffer), descriptor: sB.1),
+						  resultMatrix: c)
+		return c.data
 	}
 }
-class GEMV {
+struct GEMV {
 	let xtype: XType.Type
 	let descriptor: MPSVectorDescriptor
 	let kernel: MPSMatrixVectorMultiplication
@@ -158,7 +150,6 @@ class GEMV {
 	let sA: (Sym, MPSMatrixDescriptor)
 	let sx: (Sym, MPSVectorDescriptor)
 	let y: MPSVector//MPSTemporaryVector cannot work for mpsmatrixvectormultiplication by causing assertion
-	var last: (MTLCommandBuffer, MTLBuffer)?
 	init(type: XType.Type, A : Sym, x: Sym) throws {
 		assert( A.device === x.device )
 		assert( x.columns == 1 )
@@ -189,18 +180,13 @@ extension GEMV : Sym {
 		return kernel.device
 	}
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer {
-		if let (command, buffer): (MTLCommandBuffer, MTLBuffer) = last, command === commandBuffer {
-			return buffer
-		} else {
-			assert(commandBuffer.device === kernel.device)
-//			let y: MPSTemporaryVector = MPSTemporaryVector(commandBuffer: commandBuffer, descriptor: descriptor)
-			try kernel.encode(commandBuffer: commandBuffer,
-							  inputMatrix: MPSMatrix(buffer: sA.0.eval(commandBuffer: commandBuffer), descriptor: sA.1),
-							  inputVector: MPSVector(buffer: sx.0.eval(commandBuffer: commandBuffer), descriptor: sx.1),
-							  resultVector: y)
-			last = (commandBuffer, y.data)
-			return y.data
-		}
+		assert(commandBuffer.device === kernel.device)
+		//			let y: MPSTemporaryVector = MPSTemporaryVector(commandBuffer: commandBuffer, descriptor: descriptor)
+		try kernel.encode(commandBuffer: commandBuffer,
+						  inputMatrix: MPSMatrix(buffer: sA.0.eval(commandBuffer: commandBuffer), descriptor: sA.1),
+						  inputVector: MPSVector(buffer: sx.0.eval(commandBuffer: commandBuffer), descriptor: sx.1),
+						  resultVector: y)
+		return y.data
 	}
 }
 public func matmul(type: XType.Type, _ A: Sym, _ B: Sym) throws -> Sym {
