@@ -29,8 +29,6 @@
 		875A8C6D206E6D9900A98495 /* Matmul.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C61206E6D9800A98495 /* Matmul.swift */; };
 		875A8C6E206E6D9900A98495 /* Symbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C62206E6D9800A98495 /* Symbol.swift */; };
 		875A8C6F206E6D9900A98495 /* Normal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C63206E6D9800A98495 /* Normal.swift */; };
-		875A8C70206E6D9900A98495 /* Distribution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C64206E6D9800A98495 /* Distribution.swift */; };
-		875A8C71206E6D9900A98495 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C65206E6D9900A98495 /* Command.swift */; };
 		875A8C912073648900A98495 /* Square.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C8D2073648800A98495 /* Square.swift */; };
 		875A8C922073648900A98495 /* CopyTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C8E2073648900A98495 /* CopyTask.swift */; };
 		875A8C932073648900A98495 /* Square.metal in Sources */ = {isa = PBXBuildFile; fileRef = 875A8C8F2073648900A98495 /* Square.metal */; };
@@ -80,8 +78,6 @@
 		875A8C61206E6D9800A98495 /* Matmul.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Matmul.swift; path = ../../C3/Matmul.swift; sourceTree = "<group>"; };
 		875A8C62206E6D9800A98495 /* Symbol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Symbol.swift; path = ../../C3/Symbol.swift; sourceTree = "<group>"; };
 		875A8C63206E6D9800A98495 /* Normal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Normal.swift; path = ../../C3/Normal.swift; sourceTree = "<group>"; };
-		875A8C64206E6D9800A98495 /* Distribution.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Distribution.swift; path = ../../C3/Distribution.swift; sourceTree = "<group>"; };
-		875A8C65206E6D9900A98495 /* Command.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Command.swift; path = ../../C3/Command.swift; sourceTree = "<group>"; };
 		875A8C8D2073648800A98495 /* Square.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Square.swift; path = ../../C3/Square.swift; sourceTree = "<group>"; };
 		875A8C8E2073648900A98495 /* CopyTask.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CopyTask.swift; path = ../../C3/CopyTask.swift; sourceTree = "<group>"; };
 		875A8C8F2073648900A98495 /* Square.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; name = Square.metal; path = ../../C3/Square.metal; sourceTree = "<group>"; };
@@ -147,8 +143,6 @@
 				8723D304207DC74A00281B4C /* Repeating.swift */,
 				8723D308207DC78D00281B4C /* Repeating.metal */,
 				8723D306207DC75B00281B4C /* Expansion.swift */,
-				875A8C65206E6D9900A98495 /* Command.swift */,
-				875A8C64206E6D9800A98495 /* Distribution.swift */,
 				875A8C61206E6D9800A98495 /* Matmul.swift */,
 				875A8C63206E6D9800A98495 /* Normal.swift */,
 				875A8C5D206E6D9800A98495 /* Normal.metal */,
@@ -295,7 +289,6 @@
 				875A8C6B206E6D9900A98495 /* Uniform.swift in Sources */,
 				875A8C962073985500A98495 /* TypeCast.metal in Sources */,
 				875A8C942073648900A98495 /* Map.swift in Sources */,
-				875A8C70206E6D9900A98495 /* Distribution.swift in Sources */,
 				874E57DC207643BE009347CD /* TypeCast.swift in Sources */,
 				8723D305207DC74A00281B4C /* Repeating.swift in Sources */,
 				87D48C85207743D100106C13 /* Uniform.metal in Sources */,
@@ -320,7 +313,6 @@
 				875A8C68206E6D9900A98495 /* LA.swift in Sources */,
 				875A8C6D206E6D9900A98495 /* Matmul.swift in Sources */,
 				875A8C9820739AC100A98495 /* Task.swift in Sources */,
-				875A8C71206E6D9900A98495 /* Command.swift in Sources */,
 				8723D303207DC29B00281B4C /* Reduce.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

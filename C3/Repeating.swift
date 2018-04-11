@@ -25,12 +25,12 @@ struct Repeating {
 		let function: MTLFunction = try library.makeFunction(name: "repeating_\(s.xtype.description)", constantValues: constantValues)
 		pipeline = try device.makeComputePipelineState(function: function)
 		source = s
-		descriptor = MPSMatrixDescriptor(rows: t_rows, columns: t_columns, rowBytes: t_columns, dataType: s.xtype.mpsType)
+		descriptor = MPSMatrixDescriptor(rows: t_rows, columns: t_columns, rowBytes: t_columns * s.xtype.stride, dataType: s.xtype.mpsType)
 		threads = MTLSize(width: pipeline.threadExecutionWidth, height: 1, depth: 1)
 		groups = MTLSize(width: (length-1)/threads.width+1, height: 1, depth: 1)
 	}
 }
-extension Repeating {
+extension Repeating: Sym {
 	var rows: Int {
 		return descriptor.rows
 	}
@@ -40,7 +40,11 @@ extension Repeating {
 	var xtype: XType.Type {
 		return source.xtype
 	}
+	var device: MTLDevice {
+		return pipeline.device
+	}
 	func eval(commandBuffer: MTLCommandBuffer) throws -> MTLBuffer {
+		assert( commandBuffer.device === pipeline.device )
 		let buffer: MTLBuffer = try source.eval(commandBuffer: commandBuffer)
 		let matrix: MPSTemporaryMatrix = MPSTemporaryMatrix(commandBuffer: commandBuffer, matrixDescriptor: descriptor)
 		let encoder: MTLComputeCommandEncoder = try commandBuffer.makeComputeCommandEncoder()
@@ -52,4 +56,8 @@ extension Repeating {
 		return matrix.data
 	}
 }
-
+public func repeating(_ source: Sym, _ times: (Int, Int)) throws -> Sym {
+	assert( 0 < times.0 )
+	assert( 0 < times.1 )
+	return try Repeating(rowTimes: times.0, columnTimes: times.1, source: source)
+}

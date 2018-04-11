@@ -66,7 +66,14 @@ class C3Tests: XCTestCase {
 			XCTFail(error.localizedDescription)
 		}
 	}
-	
+	func testRepeating() {
+		eval { context in
+			let n: Sym = try context.makeStdNormal(type: Float32.self, rows: 4, columns: 4)
+			let r: Sym = try repeating(n, (4, 4))
+			let b: Buf<Float32> = try context.eval(symbol: r)
+			print(b.array)
+		}
+	}
 	func testNormal() {
 		eval { context in
 			let K: Int = Int(arc4random_uniform(32768)) + 32768
